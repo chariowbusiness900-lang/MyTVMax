@@ -33,7 +33,96 @@
   const playerMsg=t=>el.playerMsg.textContent=t;
   function loadHls(){return hlsPromise||(hlsPromise=new Promise((res,rej)=>{const s=document.createElement('script');s.src=HLS;s.onload=()=>res(window.Hls);s.onerror=()=>{hlsPromise=null;rej(new Error('hls'))};document.head.append(s)}))}
   function stopPlayer(){session++;if(hls){hls.destroy();hls=null}el.player.pause();el.player.removeAttribute('src');el.player.load();playerMsg('')}
-  async function startPlayer(url){stopPlayer();const my=session,v=el.player;playerMsg('Chargement du flux…');try{if(v.canPlayType('application/vnd.apple.mpegurl')||!/\.m3u8(\?|#|$)/i.test(url)){v.src=url}else{const H=await loadHls();if(my!==session)return;if(!H.isSupported())return playerMsg('Ce navigateur ne peut pas lire ce flux.');hls=new H({maxBufferLength:20});hls.on(H.Events.ERROR,(_,d)=>{if(!d.fatal)return;playerMsg('Flux indisponible ou bloqué par le serveur.');hls?.destroy();hls=null});hls.loadSource(url);hls.attachMedia(v)}v.play().catch(()=>{})}catch(_){playerMsg('Impossible de charger le lecteur vidéo.')}}
+  async function startPlayer(url) {
+    stopPlayer();
+
+    const my = session;
+    const v = el.player;
+
+    playerMsg('Chargement du flux…');
+    v.style.display = 'block';
+    v.controls = true;
+    v.setAttribute('playsinline', '');
+
+    const playWhenReady = () => {
+      if (my !== session) return;
+
+      v.play()
+        .then(() => playerMsg(''))
+        .catch(() => {
+          playerMsg('Appuyez sur le bouton Lecture pour démarrer le flux.');
+        });
+    };
+
+    try {
+      const isHls = /\.m3u8(\?|#|$)/i.test(url);
+
+      if (v.canPlayType('application/vnd.apple.mpegurl') && isHls) {
+        v.src = url;
+        v.addEventListener('loadedmetadata', playWhenReady, { once: true });
+        v.addEventListener('canplay', playWhenReady, { once: true });
+        v.load();
+        return;
+      }
+
+      if (!isHls) {
+        v.src = url;
+        v.addEventListener('loadedmetadata', playWhenReady, { once: true });
+        v.addEventListener('canplay', playWhenReady, { once: true });
+        v.load();
+        return;
+      }
+
+      const Hls = await loadHls();
+
+      if (my !== session) return;
+
+      if (!Hls || !Hls.isSupported()) {
+        playerMsg('Ce flux HLS n’est pas compatible avec cet appareil.');
+        return;
+      }
+
+      hls = new Hls({
+        enableWorker: true,
+        lowLatencyMode: false,
+        maxBufferLength: 30,
+        backBufferLength: 30
+      });
+
+      hls.on(Hls.Events.MEDIA_ATTACHED, () => {
+        if (my === session) playerMsg('Connexion au flux…');
+      });
+
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        if (my === session) {
+          playerMsg('Flux prêt.');
+          playWhenReady();
+        }
+      });
+
+      hls.on(Hls.Events.ERROR, (_, data) => {
+        if (!data.fatal || my !== session) return;
+
+        if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+          playerMsg('Flux bloqué ou serveur indisponible.');
+        } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+          playerMsg('Format vidéo non compatible avec Android.');
+          if (hls) hls.recoverMediaError();
+        } else {
+          playerMsg('Ce flux ne peut pas être lu dans l’application.');
+          if (hls) hls.destroy();
+          hls = null;
+        }
+      });
+
+      hls.loadSource(url);
+      hls.attachMedia(v);
+
+    } catch (e) {
+      console.error('Erreur lecteur:', e);
+      playerMsg('Impossible de charger ce flux vidéo.');
+    }
+  }
   function openDetails(c){el.detailTitle.textContent=c.n;el.detail.textContent=`Pays : ${countryLabel(c.c)}\nCatégories : ${c.k.join(', ')||'Non renseigné'}\nSite : ${c.w||'Non renseigné'}`;el.modal.showModal();startPlayer(c.u)}
   async function load(force=false){if(state.loading)return;state.loading=true;el.refresh.disabled=true;clearError();try{if(!force&&!state.all.length){const cached=await cacheGet();if(cached?.data?.length){apply(cached.data);if(Date.now()-cached.t<TTL)return}}setStatus('Mise à jour du catalogue…');const list=await fetchCatalogue(force);await cacheSet(list);apply(list)}catch(e){error(`Impossible de charger le catalogue. ${e.message}.`)}finally{state.loading=false;el.refresh.disabled=false}}
   el.countries.addEventListener('click',e=>{const b=e.target.closest('.category');if(b){state.selected=b.dataset.id;applyFilter()}});document.querySelector('[data-id="all"]').addEventListener('click',()=>{state.selected='all';applyFilter()});document.querySelector('[data-id="favorites"]').addEventListener('click',()=>{state.selected='favorites';applyFilter()});
