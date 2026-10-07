@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#08111f">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="MyTVMax, votre catalogue de chaînes publiques en direct.">
+  <title>MyTVMax — TV en direct</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#channels">Aller aux chaînes</a>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">▶</div>
+        <div><h1>MyTVMax</h1><p>La TV publique, simplement.</p></div>
+      </div>
+      <div class="actions" role="search">
+        <label for="search" class="sr-only">Rechercher une chaîne</label>
+        <input id="search" class="search" type="search" placeholder="Rechercher…" autocomplete="off">
+        <button id="refresh" class="btn primary" type="button">Actualiser</button>
+      </div>
+    </header>
+
+    <div id="globalError" class="errorbox hidden" role="alert"></div>
+
+    <section class="hero card">
+      <div>
+        <span class="eyebrow">VOTRE SÉLECTION</span>
+        <h2 id="heroTitle">Toutes les chaînes</h2>
+        <p>Retrouvez vos directs préférés et gardez-les sous la main grâce aux favoris.</p>
+        <div class="status"><span id="statusDot" class="dot"></span><span id="statusText" role="status" aria-live="polite">Préparation du catalogue…</span></div>
+      </div>
+      <div class="hero-art" aria-hidden="true"><span>✦</span><span>▶</span><span>✦</span></div>
+    </section>
+
+    <section class="layout">
+      <aside class="card sidebar">
+        <div class="section-title">Explorer</div>
+        <nav id="categories" class="categories" aria-label="Filtres">
+          <button class="category active" data-id="all" type="button"><span>Toutes les chaînes</span><b>—</b></button>
+          <button class="category" data-id="favorites" type="button"><span>Mes favoris</span><b id="favoriteCount">0</b></button>
+        </nav>
+        <div class="section-title countries-title">Pays</div>
+        <nav id="countries" class="categories" aria-label="Pays"><div class="loading"><span class="spinner"></span></div></nav>
+        <div class="sidebar-foot">Catalogue public fourni par <a href="https://github.com/iptv-org" target="_blank" rel="noreferrer">iptv-org</a>.</div>
+      </aside>
+
+      <section class="content">
+        <div class="toolbar"><div><h3 id="channelsTitle">Chaînes disponibles</h3><span id="channelCount" class="muted"></span></div><button id="clearFavorites" class="text-btn hidden" type="button">Effacer les favoris</button></div>
+        <div id="channels" class="grid" aria-live="polite"><div class="loading"><span class="spinner"></span><br>Chargement des chaînes…</div></div>
+        <div class="more-wrap"><button id="more" class="btn" type="button" hidden>Afficher plus</button></div>
+      </section>
+    </section>
+  </main>
+
+  <dialog id="modal" class="card dialog" aria-labelledby="detailTitle">
+    <div class="dlg">
+      <button class="close" id="closeModal" type="button" aria-label="Fermer">×</button>
+      <div class="modal-kicker">LECTURE EN DIRECT</div>
+      <h2 class="detail-title" id="detailTitle">Détails</h2>
+      <div id="detailContent" class="detail-content"></div>
+      <div class="video-wrap"><video id="player" controls playsinline preload="none"></video><div id="playerMsg" class="player-msg" role="status" aria-live="polite"></div><p class="hint">La lecture dépend du format du flux et des règles CORS du serveur.</p></div>
+    </div>
+  </dialog>
+  <script src="app.js"></script>
+</body>
+</html>

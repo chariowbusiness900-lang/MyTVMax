@@ -1,0 +1,19 @@
+{
+  "name": "mytvmax",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Catalogue léger de chaînes publiques en direct avec favoris.",
+  "scripts": {
+    "cap:sync": "cap sync",
+    "android:open": "cap open android",
+    "android:debug": "cap run android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/core": "^7.4.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.3",
+    "typescript": "^5.9.3"
+  }
+}
